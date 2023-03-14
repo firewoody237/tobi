@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="debug">
+    <Properties>
+        <Property name="LOG_DATEFORMAT_PATTERN">{yyyy-MM-dd HH:mm:ss.SSS}</Property>
+        <Property name="LOG_LEVEL_PATTERN">{[%-5p]}{FATAL=red blink, ERROR=red, WARN=yellow bold, INFO=green, DEBUG=green bold, TRACE=blue} %-50notEmpty{(%F:%L)} : %MDC{requestUuid}|%m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}
+        </Property>
+    </Properties>
+    <Appenders>
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout disableAnsi="false" pattern="%d${LOG_DATEFORMAT_PATTERN} %highlight${LOG_LEVEL_PATTERN}"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Logger name="com.example.tobi" level="debug" additivity="false" includeLocation="true">
+            <AppenderRef ref="console"/>
+        </Logger>
+        <Logger name="com.example.tobi.integrated.db.repository" level="info" additivity="false"
+                includeLocation="true">
+            <AppenderRef ref="console"/>
+        </Logger>
+        <Root level="warn" includeLocation="true">
+            <AppenderRef ref="console"/>
+        </Root>
+    </Loggers>
+</Configuration>

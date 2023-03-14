@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="info">
+    <Appenders>
+        <RollingFile name="rollingFile" fileName="service/api/logs/api-all.log"
+                     filePattern="service/api/logs/api-all.log.%d{yyyy-MM-dd}">
+            <PatternLayout disableAnsi="true">
+                <Pattern>%style{%d{yyyy-MM-dd HH:mm:ss.SSS}}{cyan}
+                    %highlight{[%-5p]}{FATAL=bg_red,ERROR=red,INFO=green,DEBUG=blue} (%F:%L) : %X{requestUuid}|%m%n
+                </Pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+            </Policies>
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <AsyncLogger name="com.example.tobi" level="debug" additivity="false" includeLocation="true">
+            <AppenderRef ref="rollingFile"/>
+        </AsyncLogger>
+        <AsyncLogger name="com.example.tobi.integrated.db.repository" level="info" additivity="false"
+                     includeLocation="true">
+            <AppenderRef ref="rollingFile"/>
+        </AsyncLogger>
+        <AsyncRoot level="warn" includeLocation="true">
+            <AppenderRef ref="rollingFile"/>
+        </AsyncRoot>
+    </Loggers>
+</Configuration>
