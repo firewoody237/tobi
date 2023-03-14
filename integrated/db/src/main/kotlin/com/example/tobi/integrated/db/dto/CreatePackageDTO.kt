@@ -7,5 +7,6 @@ data class CreatePackageDTO(
     val itemId: Long?,
     val paidAt: LocalDateTime?,
     val amount: Long?,
+    val quantity: Long?,
     val bundleId: Long?
 )

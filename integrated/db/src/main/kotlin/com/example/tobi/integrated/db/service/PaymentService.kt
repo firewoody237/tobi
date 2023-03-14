@@ -5,6 +5,7 @@ import com.example.tobi.integrated.common.resultcode.ResultCodeException
 import com.example.tobi.integrated.db.dto.CreatePaymentDTO
 import com.example.tobi.integrated.db.dto.DeletePaymentDTO
 import com.example.tobi.integrated.db.dto.UpdatePaymentDTO
+import com.example.tobi.integrated.db.entity.Package
 import com.example.tobi.integrated.db.entity.Payment
 import com.example.tobi.integrated.db.repository.PaymentRepository
 import org.apache.logging.log4j.Level
@@ -182,6 +183,28 @@ class PaymentService(
                 resultCode = ResultCode.ERROR_DB,
                 loglevel = Level.ERROR,
                 message = "isExistByName 호출 중 DB오류 발생 : ${e.message}"
+            )
+        }
+    }
+
+    fun getPaymentsByPackage(thisPackage: Package): MutableList<Payment> {
+        log.debug("call getPaymentsByPackage : thisPackage = '$thisPackage'")
+
+        if (thisPackage == null) {
+            throw ResultCodeException(
+                resultCode = ResultCode.ERROR_PARAMETER_NOT_EXISTS,
+                loglevel = Level.WARN,
+                message = "파라미터에 [bundle]이 존재하지 않습니다."
+            )
+        }
+
+        try {
+            return paymentRepository.findByPkg(thisPackage)
+        } catch(e: Exception) {
+            throw ResultCodeException(
+                resultCode = ResultCode.ERROR_DB,
+                loglevel = Level.ERROR,
+                message = "getPaymentsByPackage 호출 중 DB오류 발생 : ${e.message}"
             )
         }
     }

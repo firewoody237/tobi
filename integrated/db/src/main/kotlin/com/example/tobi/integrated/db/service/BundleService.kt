@@ -2,10 +2,7 @@ package com.example.tobi.integrated.db.service
 
 import com.example.tobi.integrated.common.resultcode.ResultCode
 import com.example.tobi.integrated.common.resultcode.ResultCodeException
-import com.example.tobi.integrated.db.dto.CreateBundleDTO
-import com.example.tobi.integrated.db.dto.DeleteBundleDTO
-import com.example.tobi.integrated.db.dto.PayPackageDTO
-import com.example.tobi.integrated.db.dto.UpdateBundleDTO
+import com.example.tobi.integrated.db.dto.*
 import com.example.tobi.integrated.db.entity.Bundle
 import com.example.tobi.integrated.db.entity.Package
 import com.example.tobi.integrated.db.model.Item
@@ -13,6 +10,7 @@ import com.example.tobi.integrated.db.repository.BundleRepository
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class BundleService(
@@ -204,33 +202,79 @@ class BundleService(
     fun getItemsByBundle(bundleId: Long?): MutableList<Item> {
         log.debug("call getItemsByBundle : bundleId = '$bundleId'")
 
-
+        return mutableListOf()
     }
 
-    fun payBundle(bundleId: Long?): Boolean {
+    fun payBundle(payBundleDTO: PayBundleDTO): Boolean {
         //payPackage 호출
-        log.debug("call payBundle : bundleId = '$bundleId'")
+        log.debug("call payBundle : payBundleDTO = '$payBundleDTO'")
 
-        if (bundleId == null) {
+        if (payBundleDTO.bundleId == null) {
             throw ResultCodeException(
                 ResultCode.ERROR_PARAMETER_NOT_EXISTS,
                 loglevel = Level.WARN,
-                message = "파라미터에 [ID]가 존재하지 않습니다."
+                message = "파라미터에 [bundleId]가 존재하지 않습니다."
             )
         }
 
-        val packageList = packageService.getPackagesByBundle(getBundle(bundleId))
-            .forEach {
-                packageService.payPackage(
-                    PayPackageDTO(
-                        packageId = it.id,
-                        createPaymentDTO = null
-                    )
-                )
+        if (payBundleDTO.payDTOList == null) {
+            throw ResultCodeException(
+                ResultCode.ERROR_PARAMETER_NOT_EXISTS,
+                loglevel = Level.WARN,
+                message = "파라미터에 [payDTOList]가 존재하지 않습니다."
+            )
+        }
+
+        //계산식 해줘야 함
+        //Package에 있는 Item의 Amount마다
+        //(amount/총금액) 계산해서
+        //payBundle의 payDTOList를 돌며
+        //  마지막이 아니라면, (amount/총금액)곱해서 버린 후 저장, 잔액남기기(계산금액만큼 빼기)
+        //  마지막이면 남은 금액 다더하기
+
+        val bundle = getBundle(payBundleDTO.bundleId)
+
+        val packageList = packageService.getPackagesByBundle(getBundle(payBundleDTO.bundleId))
+            .forEach {thisPackage ->
+                val rate = thisPackage.amount?.div(bundle.amount)
+
+                payBundleDTO.payDTOList.forEachIndexed() { index, pay ->
+                    if (index == payBundleDTO.payDTOList.lastIndex) {
+                        val amount = rate?.times(pay.amount)
+                        packageService.payPackage(
+                            PayPackageDTO(
+                                packageId = bundle.id,
+                                createPaymentDTO = CreatePaymentDTO(
+                                    pgId = pay.pgId,
+                                    paidAt = LocalDateTime.now(),
+                                    amount = amount,
+                                    approveNo = pay.approveNo,
+                                    approveAt = pay.approveAt,
+                                    pkgId = thisPackage.id,
+                                )
+                            )
+                        )
+                        pay.amount -= amount!!
+                    } else {
+                        val amount = pay.amount
+                        packageService.payPackage(
+                            PayPackageDTO(
+                                packageId = bundle.id,
+                                createPaymentDTO = CreatePaymentDTO(
+                                    pgId = pay.pgId,
+                                    paidAt = LocalDateTime.now(),
+                                    amount = amount,
+                                    approveNo = pay.approveNo,
+                                    approveAt = pay.approveAt,
+                                    pkgId = thisPackage.id,
+                                )
+                            )
+                        )
+                    }
+                }
             }
-
-
-        return null
+        //TODO: 이거..검증은 어떻게..?
+        return false
     }
 
     fun cancelBundle(originalBundleId: Long?): Boolean {
