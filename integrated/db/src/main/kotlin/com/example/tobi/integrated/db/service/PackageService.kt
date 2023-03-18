@@ -2,15 +2,14 @@ package com.example.tobi.integrated.db.service
 
 import com.example.tobi.integrated.common.resultcode.ResultCode
 import com.example.tobi.integrated.common.resultcode.ResultCodeException
-import com.example.tobi.integrated.db.dto.CreatePackageDTO
-import com.example.tobi.integrated.db.dto.DeletePackageDTO
+import com.example.tobi.integrated.db.dto.packages.CreatePackageDTO
+import com.example.tobi.integrated.db.dto.packages.DeletePackageDTO
 import com.example.tobi.integrated.db.dto.PayPackageDTO
-import com.example.tobi.integrated.db.dto.UpdatePackageDTO
+import com.example.tobi.integrated.db.dto.packages.UpdatePackageDTO
 import com.example.tobi.integrated.db.entity.Bundle
 import org.apache.logging.log4j.LogManager
 import org.springframework.stereotype.Service
 import com.example.tobi.integrated.db.entity.Package
-import com.example.tobi.integrated.db.entity.Payment
 import com.example.tobi.integrated.db.repository.PackageRepository
 import org.apache.logging.log4j.Level
 import java.time.LocalDateTime
@@ -90,6 +89,14 @@ class PackageService(
             )
         }
 
+        if (createPackageDTO.quantity == null) {
+            throw ResultCodeException(
+                resultCode = ResultCode.ERROR_PARAMETER_NOT_EXISTS,
+                loglevel = Level.WARN,
+                message = "파라미터에 [quantity]이 존재하지 않습니다."
+            )
+        }
+
         return try {
             packageRepository.save(
                 Package(
@@ -97,6 +104,7 @@ class PackageService(
                     itemId = createPackageDTO.itemId,
                     paidAt = createPackageDTO.paidAt,
                     amount = createPackageDTO.amount,
+                    quantity = createPackageDTO.quantity,
                     bundle = bundleService.getBundle(createPackageDTO.bundleId)
                 )
             )
@@ -139,6 +147,11 @@ class PackageService(
             isChange = true
         }
 
+        if (updatePackageDTO.quantity != null) {
+            thisPackage.quantity = updatePackageDTO.quantity
+            isChange = true
+        }
+
         return try {
             when (isChange) {
                 true -> packageRepository.save(thisPackage)
@@ -156,7 +169,7 @@ class PackageService(
         }
     }
 
-    fun deletePackage(deletePackageDTO: DeletePackageDTO): Package {
+    fun deletePackage(deletePackageDTO: DeletePackageDTO) {
         log.debug("call deletePackage : deletePackageDTO = '$deletePackageDTO'")
 
         if (deletePackageDTO.id == null) {
@@ -225,7 +238,7 @@ class PackageService(
         }
     }
 
-    fun getPackagesByBundle(bundle: Bundle): MutableList<Package> {
+    fun getPackagesByBundle(bundle: Bundle?): MutableList<Package> {
         log.debug("call getPackagesByBundle : bundle = '$bundle'")
 
         if (bundle == null) {

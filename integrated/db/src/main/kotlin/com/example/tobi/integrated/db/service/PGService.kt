@@ -2,14 +2,13 @@ package com.example.tobi.integrated.db.service
 
 import com.example.tobi.integrated.common.resultcode.ResultCode
 import com.example.tobi.integrated.common.resultcode.ResultCodeException
-import com.example.tobi.integrated.db.dto.CreatePGDTO
-import com.example.tobi.integrated.db.dto.DeletePGDTO
-import com.example.tobi.integrated.db.dto.UpdatePGDTO
+import com.example.tobi.integrated.db.dto.pg.CreatePGDTO
+import com.example.tobi.integrated.db.dto.pg.DeletePGDTO
+import com.example.tobi.integrated.db.dto.pg.UpdatePGDTO
 import com.example.tobi.integrated.db.entity.PG
 import com.example.tobi.integrated.db.repository.PGRepository
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
-import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 
 @Service

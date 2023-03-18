@@ -2,9 +2,9 @@ package com.example.tobi.integrated.db.service
 
 import com.example.tobi.integrated.common.resultcode.ResultCode
 import com.example.tobi.integrated.common.resultcode.ResultCodeException
-import com.example.tobi.integrated.db.dto.CreatePGCodeDTO
-import com.example.tobi.integrated.db.dto.DeletePGCodeDTO
-import com.example.tobi.integrated.db.dto.UpdatePGCodeDTO
+import com.example.tobi.integrated.db.dto.pgcd.CreatePGCodeDTO
+import com.example.tobi.integrated.db.dto.pgcd.DeletePGCodeDTO
+import com.example.tobi.integrated.db.dto.pgcd.UpdatePGCodeDTO
 import com.example.tobi.integrated.db.entity.PGCode
 import com.example.tobi.integrated.db.repository.PGCodeRepository
 import org.apache.logging.log4j.Level

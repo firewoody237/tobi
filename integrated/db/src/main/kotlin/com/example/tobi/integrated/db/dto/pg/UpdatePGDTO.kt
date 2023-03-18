@@ -1,4 +1,4 @@
-package com.example.tobi.integrated.db.dto
+package com.example.tobi.integrated.db.dto.pg
 
 import com.example.tobi.integrated.db.entity.PGCode
 
