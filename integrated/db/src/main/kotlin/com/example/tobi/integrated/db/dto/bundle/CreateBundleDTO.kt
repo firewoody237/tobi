@@ -1,9 +1,8 @@
-package com.example.tobi.integrated.db.dto
+package com.example.tobi.integrated.db.dto.bundle
 
 import java.time.LocalDateTime
 
-data class UpdateBundleDTO(
-    val id: Long?,
+data class CreateBundleDTO(
     val userId: Long?,
     val paidAt: LocalDateTime?,
     val amount: Long?,

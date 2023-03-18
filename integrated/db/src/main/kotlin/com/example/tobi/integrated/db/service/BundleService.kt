@@ -3,10 +3,14 @@ package com.example.tobi.integrated.db.service
 import com.example.tobi.integrated.common.resultcode.ResultCode
 import com.example.tobi.integrated.common.resultcode.ResultCodeException
 import com.example.tobi.integrated.db.dto.*
+import com.example.tobi.integrated.db.dto.bundle.CreateBundleDTO
+import com.example.tobi.integrated.db.dto.bundle.DeleteBundleDTO
+import com.example.tobi.integrated.db.dto.bundle.UpdateBundleDTO
+import com.example.tobi.integrated.db.dto.payment.CreatePaymentDTO
 import com.example.tobi.integrated.db.entity.Bundle
-import com.example.tobi.integrated.db.entity.Package
 import com.example.tobi.integrated.db.model.Item
 import com.example.tobi.integrated.db.repository.BundleRepository
+import com.example.tobi.integrated.db.service.pg.PayHelper
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
 import org.springframework.stereotype.Service
@@ -18,6 +22,7 @@ class BundleService(
     private val packageService: PackageService,
     private val userApiService: UserApiService,
     private val itemApiService: ItemApiService,
+    private val payHelper: PayHelper,
 ) {
 
     companion object {
@@ -208,6 +213,9 @@ class BundleService(
     fun payBundle(payBundleDTO: PayBundleDTO): Boolean {
         //payPackage 호출
         log.debug("call payBundle : payBundleDTO = '$payBundleDTO'")
+
+        payHelper.payment("0")
+
 
         if (payBundleDTO.bundleId == null) {
             throw ResultCodeException(

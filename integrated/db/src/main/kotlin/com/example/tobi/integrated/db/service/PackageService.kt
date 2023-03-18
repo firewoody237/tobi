@@ -2,15 +2,14 @@ package com.example.tobi.integrated.db.service
 
 import com.example.tobi.integrated.common.resultcode.ResultCode
 import com.example.tobi.integrated.common.resultcode.ResultCodeException
-import com.example.tobi.integrated.db.dto.CreatePackageDTO
-import com.example.tobi.integrated.db.dto.DeletePackageDTO
+import com.example.tobi.integrated.db.dto.packages.CreatePackageDTO
+import com.example.tobi.integrated.db.dto.packages.DeletePackageDTO
 import com.example.tobi.integrated.db.dto.PayPackageDTO
-import com.example.tobi.integrated.db.dto.UpdatePackageDTO
+import com.example.tobi.integrated.db.dto.packages.UpdatePackageDTO
 import com.example.tobi.integrated.db.entity.Bundle
 import org.apache.logging.log4j.LogManager
 import org.springframework.stereotype.Service
 import com.example.tobi.integrated.db.entity.Package
-import com.example.tobi.integrated.db.entity.Payment
 import com.example.tobi.integrated.db.repository.PackageRepository
 import org.apache.logging.log4j.Level
 import java.time.LocalDateTime

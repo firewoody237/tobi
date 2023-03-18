@@ -2,9 +2,9 @@ package com.example.tobi.integrated.db.service
 
 import com.example.tobi.integrated.common.resultcode.ResultCode
 import com.example.tobi.integrated.common.resultcode.ResultCodeException
-import com.example.tobi.integrated.db.dto.CreatePaymentDTO
-import com.example.tobi.integrated.db.dto.DeletePaymentDTO
-import com.example.tobi.integrated.db.dto.UpdatePaymentDTO
+import com.example.tobi.integrated.db.dto.payment.CreatePaymentDTO
+import com.example.tobi.integrated.db.dto.payment.DeletePaymentDTO
+import com.example.tobi.integrated.db.dto.payment.UpdatePaymentDTO
 import com.example.tobi.integrated.db.entity.Package
 import com.example.tobi.integrated.db.entity.Payment
 import com.example.tobi.integrated.db.repository.PaymentRepository

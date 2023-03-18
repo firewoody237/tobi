@@ -23,6 +23,13 @@ enum class ResultCode(val code: Int, val msg: String) {
     ERROR_USER_CONNECTION(2003, "사용자 호출 api 통신 오류입니다."),
     ERROR_USER_RESPONSE(2004, "사용자 호출 응답 오류 입니다."),
 
+    //2200 : 상품관련
+    ERROR_ITEM_NOT_EXISTS(2200, "존재하지 않는 상품입니다."),
+    ERROR_ITEM_ALREADY_EXISTS(2201, "이미 존재하는 ID 입니다."),
+    ERROR_ITEM_NOT_ADMIN(2202, "Admin 사용자가 아닙니다."),
+    ERROR_ITEM_CONNECTION(2203, "상품 호출 api 통신 오류입니다."),
+    ERROR_ITEM_RESPONSE(2204, "상품 호출 응답 오류 입니다."),
+
     //2100 : 포인트 관련
     ERROR_POINT_MINUS(2101, "포인트가 음수입니다."),
 
