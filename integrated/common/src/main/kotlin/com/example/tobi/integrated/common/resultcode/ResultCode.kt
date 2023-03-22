@@ -59,6 +59,7 @@ enum class ResultCode(val code: Int, val msg: String) {
     //8400 : Bundle
     ERROR_BUNDLE_NOT_EXISTS(8401, "존재하지 않는 Bundle입니다."),
     ERROR_BUNDLE_ALREADY_EXISTS(8402, "이미 같은 Bundle가 존재합니다."),
+    ERROR_BUNDLE_AMOUNT_NOT_MATCHED(8403, "Bundle의 금액이 일치하지 않습니다."),
 
     //9000 : 확인이 힘든 오류
     ERROR_DB(9002, "DB 변경 중 오류"),

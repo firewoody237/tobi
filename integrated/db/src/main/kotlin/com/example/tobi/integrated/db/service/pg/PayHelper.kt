@@ -2,6 +2,8 @@ package com.example.tobi.integrated.db.service.pg
 
 import com.example.tobi.integrated.common.resultcode.ResultCode
 import com.example.tobi.integrated.common.resultcode.ResultCodeException
+import com.example.tobi.integrated.db.service.pg.dto.PaymentDTO
+import com.example.tobi.integrated.db.service.pg.dto.ResultDTO
 import org.apache.logging.log4j.Level
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -17,17 +19,16 @@ class PayHelper {
             it.mappingKeySet.forEach { key ->
                 payMapper[key] = it
             }
-        }
+        } //질문 : 이거 왜 mappingKeySet에 forEach하는지?
     }
 
-
-    fun payment(pgcd: String) {
-        val payService = getPayService(pgcd) ?: throw ResultCodeException(
+    fun payment(paymentDTO: PaymentDTO): ResultDTO {
+        val payService = getPayService(paymentDTO.pgcd) ?: throw ResultCodeException(
             resultCode = ResultCode.ERROR_PARAMETER_NOT_EXISTS,
             loglevel = Level.WARN,
-            message = "파라미터에 [id]이 존재하지 않습니다."
+            message = "파라미터에 [pgcd]이 존재하지 않습니다."
         )
-        payService.payment()
+        return payService.payment(paymentDTO)
     }
 
 

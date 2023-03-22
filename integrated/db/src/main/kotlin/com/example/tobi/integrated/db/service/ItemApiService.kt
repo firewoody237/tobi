@@ -39,7 +39,7 @@ class ItemApiService(
 
     private val httpClient = HttpClient
         .create()
-        .baseUrl(USER_API_HOST)
+        .baseUrl(ITEM_API_HOST)
         .responseTimeout(Duration.ofMillis(5000))
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000)
 

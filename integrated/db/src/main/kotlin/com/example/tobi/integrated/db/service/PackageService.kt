@@ -57,14 +57,6 @@ class PackageService(
     fun createPackage(createPackageDTO: CreatePackageDTO): Package {
         log.debug("call createPackage : createPackageDTO = '$createPackageDTO'")
 
-        if (createPackageDTO.title == null) {
-            throw ResultCodeException(
-                resultCode = ResultCode.ERROR_PARAMETER_NOT_EXISTS,
-                loglevel = Level.WARN,
-                message = "파라미터에 [title]이 존재하지 않습니다."
-            )
-        }
-
         if (createPackageDTO.itemId == null) {
             throw ResultCodeException(
                 resultCode = ResultCode.ERROR_PARAMETER_NOT_EXISTS,
@@ -100,10 +92,10 @@ class PackageService(
         return try {
             packageRepository.save(
                 Package(
-                    title = createPackageDTO.title,
                     itemId = createPackageDTO.itemId,
                     paidAt = createPackageDTO.paidAt,
                     amount = createPackageDTO.amount,
+                    paid = createPackageDTO.paid,
                     quantity = createPackageDTO.quantity,
                     bundle = bundleService.getBundle(createPackageDTO.bundleId)
                 )
@@ -132,11 +124,6 @@ class PackageService(
         var isChange = false
         val thisPackage = getPackage(updatePackageDTO.id)
 
-        if (updatePackageDTO.title != null) {
-            thisPackage.title = updatePackageDTO.title
-            isChange = true
-        }
-
         if (updatePackageDTO.paidAt != null) {
             thisPackage.paidAt = updatePackageDTO.paidAt
             isChange = true
@@ -144,6 +131,11 @@ class PackageService(
 
         if (updatePackageDTO.amount != null) {
             thisPackage.amount = updatePackageDTO.amount
+            isChange = true
+        }
+
+        if (updatePackageDTO.paid != null) {
+            thisPackage.paid = updatePackageDTO.paid
             isChange = true
         }
 
@@ -208,7 +200,7 @@ class PackageService(
         }
     }
 
-    fun payPackage(payPackageDTO: PayPackageDTO): Boolean {
+    fun payPackage(payPackageDTO: PayPackageDTO) {
         log.debug("call payPackage : payPackageDTO = '$payPackageDTO'")
 
         if (payPackageDTO.packageId == null) {
@@ -218,24 +210,17 @@ class PackageService(
                 message = "파라미터에 [ID]가 존재하지 않습니다."
             )
         }
-
-        if (paymentService.createPayment(payPackageDTO.createPaymentDTO) != null) {
-            updatePackage(
-                UpdatePackageDTO(
-                    id = payPackageDTO.packageId,
-                    title = null,
-                    paidAt = LocalDateTime.now(),
-                    amount = payPackageDTO.createPaymentDTO.amount
-                )
+        val getPackage = getPackage(payPackageDTO.packageId)
+        paymentService.createPayment(payPackageDTO.createPaymentDTO)
+        updatePackage(
+            UpdatePackageDTO(
+                id = getPackage.id,
+                paidAt = LocalDateTime.now(),
+                quantity = getPackage.quantity,
+                amount = getPackage.amount,
+                paid = getPackage.paid?.plus(payPackageDTO.createPaymentDTO.amount!!)
             )
-            return true
-        } else {
-            throw ResultCodeException(
-                resultCode = ResultCode.ERROR_DB,
-                loglevel = Level.ERROR,
-                message = "payPackage.createPayment 오류"
-            )
-        }
+        )
     }
 
     fun getPackagesByBundle(bundle: Bundle?): MutableList<Package> {

@@ -20,13 +20,13 @@ data class Package(
     @GeneratedValue
     val id: Long = 0L,
     @Column
-    var title: String? = "",
-    @Column
     val itemId: Long? = 0L,
     @Column
     var paidAt: LocalDateTime? = null,
     @Column
     var amount: Long? = 0L,
+    @Column
+    var paid: Long? = 0L,
     @Column
     var quantity: Long? = 0L,
     @ManyToOne
@@ -50,6 +50,6 @@ data class Package(
     }
 
     override fun toString(): String {
-        return "Package(id=$id, title='$title', itemId='$itemId', paidAt='$paidAt', amount='$amount', bundle='$bundle')"
+        return "Package(id=$id, itemId='$itemId', paidAt='$paidAt', amount='$amount', bundle='$bundle')"
     }
 }
