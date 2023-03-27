@@ -21,6 +21,8 @@ data class Bundle(
     @Column
     var paidAt: LocalDateTime? = null,
     @Column
+    var cancelYn: Boolean = false,
+    @Column
     var amount: Long = 0L,
     @Column
     var originalBundleId: Long? = null,

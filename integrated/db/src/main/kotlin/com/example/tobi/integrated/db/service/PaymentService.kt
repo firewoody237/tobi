@@ -208,4 +208,26 @@ class PaymentService(
             )
         }
     }
+
+    fun getPaymentsByApprove(approveNo: String): Payment {
+        log.debug("call getPaymentsByApprove : approveNo = '$approveNo'")
+
+        if (approveNo.isBlank()) {
+            throw ResultCodeException(
+                resultCode = ResultCode.ERROR_PARAMETER_NOT_EXISTS,
+                loglevel = Level.WARN,
+                message = "파라미터에 [approveNo]이 존재하지 않습니다."
+            )
+        }
+
+        try {
+            return paymentRepository.findByApproveNo(approveNo)
+        } catch(e: Exception) {
+            throw ResultCodeException(
+                resultCode = ResultCode.ERROR_DB,
+                loglevel = Level.ERROR,
+                message = "getPaymentsByApprove 호출 중 DB오류 발생 : ${e.message}"
+            )
+        }
+    }
 }

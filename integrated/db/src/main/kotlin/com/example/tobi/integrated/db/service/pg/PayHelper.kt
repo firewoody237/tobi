@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class PayHelper {
-    private val payMapper: MutableMap<String, PayService> = mutableMapOf()
+    private val payMapper: MutableMap<Long, PayService> = mutableMapOf()
 
 
     @Autowired
@@ -23,7 +23,7 @@ class PayHelper {
     }
 
     fun payment(paymentDTO: PaymentDTO): ResultDTO {
-        val payService = getPayService(paymentDTO.pgcd) ?: throw ResultCodeException(
+        val payService = getPayService(paymentDTO.pgId!!) ?: throw ResultCodeException(
             resultCode = ResultCode.ERROR_PARAMETER_NOT_EXISTS,
             loglevel = Level.WARN,
             message = "파라미터에 [pgcd]이 존재하지 않습니다."
@@ -31,8 +31,17 @@ class PayHelper {
         return payService.payment(paymentDTO)
     }
 
+    fun cancel(paymentDTO: PaymentDTO): ResultDTO {
+        val payService = getPayService(paymentDTO.pgId!!) ?: throw ResultCodeException(
+            resultCode = ResultCode.ERROR_PARAMETER_NOT_EXISTS,
+            loglevel = Level.WARN,
+            message = "파라미터에 [pgcd]이 존재하지 않습니다."
+        )
+        return payService.cancel(paymentDTO)
+    }
 
-    private fun getPayService(pgcd: String): PayService? {
+
+    private fun getPayService(pgcd: Long): PayService? {
         return payMapper[pgcd]
     }
 

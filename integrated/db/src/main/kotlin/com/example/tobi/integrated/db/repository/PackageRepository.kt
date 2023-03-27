@@ -9,4 +9,5 @@ import org.springframework.stereotype.Repository
 interface PackageRepository : JpaRepository<Package, Long> {
 
     fun findByBundle(bundle: Bundle): MutableList<Package>
+    fun findByBundleAndItemId(bundle: Bundle, itemId: Long): Package
 }

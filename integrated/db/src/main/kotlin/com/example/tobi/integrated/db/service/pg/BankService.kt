@@ -16,5 +16,10 @@ class BankService() : PayService {
         log.debug("BankService")
     }
 
-    override val mappingKeySet: Set<String> = setOf("1")
+    override fun cancel(dto: PaymentDTO): ResultDTO {
+        TODO("Not yet implemented")
+        log.debug("BankService - cancel")
+    }
+
+    override val mappingKeySet: Set<Long> = setOf(1L)
 }

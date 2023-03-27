@@ -6,6 +6,7 @@ import com.example.tobi.integrated.db.service.pg.dto.ResultDTO
 interface PayService {
 
     fun payment(dto: PaymentDTO): ResultDTO
+    fun cancel(dto: PaymentDTO): ResultDTO
 
-    val mappingKeySet: Set<String>
+    val mappingKeySet: Set<Long>
 }

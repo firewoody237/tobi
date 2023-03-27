@@ -10,6 +10,7 @@ import com.example.tobi.integrated.db.entity.Bundle
 import org.apache.logging.log4j.LogManager
 import org.springframework.stereotype.Service
 import com.example.tobi.integrated.db.entity.Package
+import com.example.tobi.integrated.db.entity.Payment
 import com.example.tobi.integrated.db.repository.PackageRepository
 import org.apache.logging.log4j.Level
 import java.time.LocalDateTime
@@ -45,7 +46,7 @@ class PackageService(
                         message = "getPackage : id['${id}'] 컨텐츠 제공자가 존재하지 않습니다."
                     )
                 }
-        } catch(e: Exception) {
+        } catch (e: Exception) {
             throw ResultCodeException(
                 resultCode = ResultCode.ERROR_DB,
                 loglevel = Level.ERROR,
@@ -200,7 +201,7 @@ class PackageService(
         }
     }
 
-    fun payPackage(payPackageDTO: PayPackageDTO) {
+    fun payPackage(payPackageDTO: PayPackageDTO): Payment {
         log.debug("call payPackage : payPackageDTO = '$payPackageDTO'")
 
         if (payPackageDTO.packageId == null) {
@@ -211,7 +212,7 @@ class PackageService(
             )
         }
         val getPackage = getPackage(payPackageDTO.packageId)
-        paymentService.createPayment(payPackageDTO.createPaymentDTO)
+        val payment = paymentService.createPayment(payPackageDTO.createPaymentDTO)
         updatePackage(
             UpdatePackageDTO(
                 id = getPackage.id,
@@ -221,6 +222,7 @@ class PackageService(
                 paid = getPackage.paid?.plus(payPackageDTO.createPaymentDTO.amount!!)
             )
         )
+        return payment
     }
 
     fun getPackagesByBundle(bundle: Bundle?): MutableList<Package> {
@@ -236,7 +238,37 @@ class PackageService(
 
         try {
             return packageRepository.findByBundle(bundle)
-        } catch(e: Exception) {
+        } catch (e: Exception) {
+            throw ResultCodeException(
+                resultCode = ResultCode.ERROR_DB,
+                loglevel = Level.ERROR,
+                message = "getPackagesByBundle 호출 중 DB오류 발생 : ${e.message}"
+            )
+        }
+    }
+
+    fun getPackageByBundleAndItemId(bundle: Bundle?, itemId: Long?): Package {
+        log.debug("call getPackageByBundleAndItemId : bundle = '$bundle', itemId = '$itemId'")
+
+        if (bundle == null) {
+            throw ResultCodeException(
+                resultCode = ResultCode.ERROR_PARAMETER_NOT_EXISTS,
+                loglevel = Level.WARN,
+                message = "파라미터에 [bundle]이 존재하지 않습니다."
+            )
+        }
+
+        if (itemId == null) {
+            throw ResultCodeException(
+                resultCode = ResultCode.ERROR_PARAMETER_NOT_EXISTS,
+                loglevel = Level.WARN,
+                message = "파라미터에 [itemId]이 존재하지 않습니다."
+            )
+        }
+
+        try {
+            return packageRepository.findByBundleAndItemId(bundle, itemId)
+        } catch (e: Exception) {
             throw ResultCodeException(
                 resultCode = ResultCode.ERROR_DB,
                 loglevel = Level.ERROR,
