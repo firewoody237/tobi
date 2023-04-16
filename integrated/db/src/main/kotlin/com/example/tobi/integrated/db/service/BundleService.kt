@@ -7,6 +7,7 @@ import com.example.tobi.integrated.db.dto.bundle.*
 import com.example.tobi.integrated.db.dto.packages.CreatePackageDTO
 import com.example.tobi.integrated.db.dto.payment.CreatePaymentDTO
 import com.example.tobi.integrated.db.entity.Bundle
+import com.example.tobi.integrated.db.entity.Package
 import com.example.tobi.integrated.db.model.Item
 import com.example.tobi.integrated.db.repository.BundleRepository
 import com.example.tobi.integrated.db.service.pg.PayHelper
@@ -125,7 +126,6 @@ class BundleService(
                     userId = user.id,
                     paidAt = createBundleDTO.paidAt,
                     amount = createBundleDTO.amount,
-                    originalBundleId = createBundleDTO.originalBundleId
                 )
             )
         } catch (e: Exception) {
@@ -164,16 +164,6 @@ class BundleService(
 
         if (updateBundleDTO.amount != null) {
             bundle.amount = updateBundleDTO.amount
-            isChange = true
-        }
-
-        if (updateBundleDTO.cancelYn != null) {
-            bundle.cancelYn = updateBundleDTO.cancelYn
-            isChange = true
-        }
-
-        if (updateBundleDTO.originalBundleId != null) {
-            bundle.originalBundleId = updateBundleDTO.originalBundleId
             isChange = true
         }
 
@@ -233,17 +223,26 @@ class BundleService(
         }
     }
 
-    fun getItemsByBundle(bundleId: Long?): MutableList<Item> {
-        log.debug("call getItemsByBundle : bundleId = '$bundleId'")
+    fun getPackagesByBundle(bundleId: Long?): MutableList<Package> {
+        log.debug("call getPackagesByBundle : bundleId = '$bundleId'")
 
-        return mutableListOf()
+        if (bundleId == null) {
+            throw ResultCodeException(
+                ResultCode.ERROR_PARAMETER_NOT_EXISTS,
+                loglevel = Level.WARN,
+                message = "파라미터에 [ID]가 존재하지 않습니다."
+            )
+        }
+
+        return packageService.getPackagesByBundle(getBundle(bundleId))
     }
 
     @Transactional
-    fun payBundle(payBundleDTO: PayBundleDTO) {
+    fun payBundle(payBundleDTO: PayBundleDTO): String {
         //payPackage 호출
         log.debug("call payBundle : payBundleDTO = '$payBundleDTO'")
 
+        //검증부
         if (payBundleDTO.bundleId == null) {
             throw ResultCodeException(
                 ResultCode.ERROR_PARAMETER_NOT_EXISTS,
@@ -268,14 +267,14 @@ class BundleService(
             )
         }
 
-
+        //결제 제한 조건 검증
         payBundleDTO.payDTOList.forEach {
             //payable check : 100원, 한도, PG별
             //TODO
         }
 
 
-        val approveList : MutableList<ResultDTO> = mutableListOf()
+        val approveList: MutableList<ResultDTO> = mutableListOf()
         try {
             payBundleDTO.payDTOList.forEach {
                 val approve = addPayToBundle(
@@ -283,34 +282,51 @@ class BundleService(
                         bundleId = bundle.id,
                         paymentDTO = PaymentDTO(
                             pgId = pgService.getPG(it.pgId).id,
-                            approveNo = null,),
+                            approveNo = null,
+                        ),
                         amount = it.amount
                     )
                 )
                 approveList.add(approve)
             }
-        } catch (e:Exception) {
+        } catch (e: Exception) {
             try {
                 approveList.forEach {
                     //abort
                     abortPayments(it)
-                    throw e
                 }
-            }catch (e1:Exception){
-                throw e1
+                throw ResultCodeException(
+                    ResultCode.ERROR_PAYMENT_FAILED,
+                    loglevel = Level.WARN,
+                    message = e.message
+                )
+            } catch (e1: Exception) {
+                throw ResultCodeException(
+                    ResultCode.ERROR_PAYMENT_ABORT_FAILED,
+                    loglevel = Level.WARN,
+                    message = e1.message
+                )
             }
-
-            throw e
         }
 
+
+//        { "cardId" : 1 }
+
+
         //call shopping surl(success url) -->
-        shoppingApi.success("/aaaa/1/success")
+        return "${payBundleDTO.surl}?rparam=${payBundleDTO.rparam}"
+
         //1. 이 프로젝트의 경우 어디로 success콜백해줘야 하는걸까? 유저..?
+        
+        //fds, aml
 
-        surl
-        rparam (return param){cart id}
+        // talktalk, kakao talk, mail
 
-        return rurl(redirect url) --> 프론터 고객이동
+        //recent pay method
+
+        //receipt
+
+        //kafka (mydata)
     }
 
     fun abortPayments(payment: ResultDTO) {
@@ -328,16 +344,18 @@ class BundleService(
         //pay찾아오기
         val pay = paymentService.getPaymentsByApprove(payment.approveNo)
 
-        payHelper.cancel(
+        val resultDto = payHelper.cancel(
             PaymentDTO(
                 pgId = payment.pgId,
                 approveNo = payment.approveNo
             )
         )
+
+        //TODO
     }
 
     @Transactional
-    fun cancelBundle(originalBundleId: Long?) {
+    fun cancelBundle2(originalBundleId: Long?) {
         //로그
         //파라미터 검증
         log.debug("call cancelBundle : originalBundleId = '$originalBundleId'")
@@ -419,10 +437,61 @@ class BundleService(
                 userId = null,
                 paidAt = null,
                 amount = null,
-                originalBundleId = null,
                 cancelYn = true,
             )
         )
+    }
+
+    @Transactional
+    fun cancelBundle(originalBundleId: Long?) {
+        //로그
+        //파라미터 검증
+        log.debug("call cancelBundle : originalBundleId = '$originalBundleId'")
+
+        if (originalBundleId == null) {
+            throw ResultCodeException(
+                ResultCode.ERROR_PARAMETER_NOT_EXISTS,
+                loglevel = Level.WARN,
+                message = "파라미터에 [originalBundleId]가 존재하지 않습니다."
+            )
+        }
+        //해당 번들이 결제가 되어있으면(+취소안되어있으면)
+        val originalBundle = getBundle(originalBundleId)
+
+        if (originalBundle.paidAt == null) {
+            throw ResultCodeException(
+                ResultCode.ERROR_BUNDLE_NOT_PAID,
+                loglevel = Level.WARN,
+            )
+        }
+
+        val cancelBundle = createBundle(
+            CreateBundleDTO(
+                userId = originalBundle.userId,
+                paidAt = null,
+                amount = originalBundle.amount,
+                originalBundleId = originalBundle.id
+            )
+        )
+
+        packageService.getPackagesByBundle(originalBundle).forEach {
+            packageService.createPackage(
+                CreatePackageDTO(
+                    itemId = it.itemId,
+                    paidAt = it.paidAt,
+                    amount = it.amount?.times(-1),
+                    paid = null,
+                    quantity = it.quantity?.times(-1),
+                    bundleId = cancelBundle.id
+                )
+            )
+
+            packageService.cancelPackage(
+                CancelPackageDTO(
+                    packageId = it.id
+                )
+            )
+        }
     }
 
     @Transactional
@@ -473,15 +542,9 @@ class BundleService(
                 userId = user.id,
                 paidAt = bundle.paidAt,
                 amount = bundle.amount + item.price?.times(addItemToBundleDTO.quantity)!!,
-                originalBundleId = bundle.originalBundleId,
                 cancelYn = false
             )
         )
-    }
-
-    fun removeItemFromBundle() {
-        //번들 확인하고 결제 없으면
-        //해당 아이템 제거
     }
 
     fun addPayToBundle(addPayToBundleDTO: AddPayToBundleDTO): ResultDTO {
@@ -510,8 +573,6 @@ class BundleService(
                 message = "파라미터에 [amount]가 존재하지 않습니다."
             )
         }
-
-
 
 
         val approve = payHelper.payment(

@@ -32,6 +32,8 @@ data class Payment(
     @ManyToOne
     @JoinColumn
     val pkg: Package? = null,
+    @Column
+    var originalPaymentId: Long? = null,
 ) : BaseTime() {
 
     override fun equals(other: Any?): Boolean {
@@ -50,6 +52,6 @@ data class Payment(
     }
 
     override fun toString(): String {
-        return "Package(id=$id, pg='$pg', approveNo='$approveNo', paidAt='$paidAt', amount='$amount', approveAt='$approveAt', pkg='$pkg')"
+        return "Package(id=$id, pg='$pg', approveNo='$approveNo', paidAt='$paidAt', amount='$amount', approveAt='$approveAt', pkg='$pkg', originalPaymentId='$originalPaymentId')"
     }
 }

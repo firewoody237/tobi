@@ -29,6 +29,8 @@ data class Package(
     var paid: Long? = 0L,
     @Column
     var quantity: Long? = 0L,
+    @Column
+    var refPackageId: Long? = 0L,
     @ManyToOne
     @JoinColumn
     val bundle: Bundle? = null,

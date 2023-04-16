@@ -8,5 +8,4 @@ data class UpdateBundleDTO(
     val paidAt: LocalDateTime?,
     val amount: Long?,
     val cancelYn: Boolean?,
-    val originalBundleId: Long?
 )

@@ -51,6 +51,8 @@ enum class ResultCode(val code: Int, val msg: String) {
     //8200 : Payment
     ERROR_PAYMENT_NOT_EXISTS(8201, "존재하지 않는 Payment입니다."),
     ERROR_PAYMENT_ALREADY_EXISTS(8202, "이미 같은 Payment가 존재합니다."),
+    ERROR_PAYMENT_FAILED(8203, "지불에 실패했습니다."),
+    ERROR_PAYMENT_ABORT_FAILED(8204, "지불 ABORT에 실패했습니다."),
 
     //8300 : Package
     ERROR_PACKAGE_NOT_EXISTS(8301, "존재하지 않는 Package입니다."),

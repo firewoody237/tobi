@@ -12,7 +12,7 @@ import javax.persistence.Table
 
 @Entity
 @EntityListeners(value = [AuditingEntityListener::class])
-@Table(name = "bundle")
+@Table(name = "pg")
 data class PG(
     @Id
     @GeneratedValue
