@@ -1,6 +1,5 @@
 package com.example.tobi.integrated.db.service.pg
 
-import com.example.tobi.integrated.db.service.pg.dto.PaymentDTO
 import com.example.tobi.integrated.db.service.pg.dto.ResultDTO
 import org.apache.logging.log4j.LogManager
 import org.springframework.stereotype.Service

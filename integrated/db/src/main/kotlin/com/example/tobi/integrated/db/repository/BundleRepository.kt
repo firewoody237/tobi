@@ -7,5 +7,5 @@ import java.util.*
 
 @Repository
 interface BundleRepository : JpaRepository<Bundle, Long> {
-    fun findByUserIdAndPaidAtIsNull(userId: Long): Optional<Bundle>
+    fun findByUserId(userId: Long): Optional<Bundle>
 }

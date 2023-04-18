@@ -18,10 +18,9 @@ data class PG(
     @GeneratedValue
     val id: Long = 0L,
     @Column
+    val pgCode: String? = null,
+    @Column
     var name: String? = "",
-    @ManyToOne
-    @JoinColumn
-    var pgCode: PGCode? = null
 ) : BaseTime() {
 
     override fun equals(other: Any?): Boolean {
@@ -40,7 +39,7 @@ data class PG(
     }
 
     override fun toString(): String {
-        return "Package(id=$id, name='$name', pgCode='$pgCode')"
+        return "PG(id=$id, name='$name', pgCode='$pgCode')"
     }
 
 }

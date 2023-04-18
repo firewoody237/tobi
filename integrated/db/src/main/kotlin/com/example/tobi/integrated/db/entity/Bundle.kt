@@ -1,8 +1,6 @@
 package com.example.tobi.integrated.db.entity
 
-import com.example.tobi.integrated.db.enum.BundleStatus
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
-import java.time.LocalDateTime
 import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.EntityListeners
@@ -19,10 +17,6 @@ data class Bundle(
     val id: Long = 0L,
     @Column
     var userId: Long? = null,
-    @Column
-    var paidAt: LocalDateTime? = null,
-    @Column
-    var bundleStatus: BundleStatus = BundleStatus.WAITING,
     @Column
     var amount: Long = 0L,
 ) : BaseTime() {
@@ -43,6 +37,6 @@ data class Bundle(
     }
 
     override fun toString(): String {
-        return "Bundle(id=$id, userId='$userId', paidAt='$paidAt', bundleStatus='$bundleStatus', amount='$amount')"
+        return "Bundle(id=$id, userId='$userId', amount='$amount')"
     }
 }

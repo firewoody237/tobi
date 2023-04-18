@@ -64,6 +64,7 @@ enum class ResultCode(val code: Int, val msg: String) {
     ERROR_BUNDLE_AMOUNT_NOT_MATCHED(8403, "Bundle의 금액이 일치하지 않습니다."),
     ERROR_BUNDLE_ALREADY_CANCELED(8404, "이미 취소된 Bundle입니다."),
     ERROR_BUNDLE_NOT_PAID(8405, "결제되지 않은 Bundle입니다."),
+    ERROR_BUNDLE_SUM_FAIL(8406, "결제 SUM 실패입니다."),
 
     //9000 : 확인이 힘든 오류
     ERROR_DB(9002, "DB 변경 중 오류"),
