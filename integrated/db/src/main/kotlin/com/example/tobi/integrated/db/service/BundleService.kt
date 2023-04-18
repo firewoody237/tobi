@@ -3,11 +3,14 @@ package com.example.tobi.integrated.db.service
 import com.example.tobi.integrated.common.resultcode.ResultCode
 import com.example.tobi.integrated.common.resultcode.ResultCodeException
 import com.example.tobi.integrated.db.dto.*
+import com.example.tobi.integrated.db.dto.PaymentLimitCondDTO.CheckDailyLimitDTO
+import com.example.tobi.integrated.db.dto.PaymentLimitCondDTO.CheckMonthlyLimitDTO
 import com.example.tobi.integrated.db.dto.bundle.*
 import com.example.tobi.integrated.db.dto.packages.CreatePackageDTO
 import com.example.tobi.integrated.db.dto.payment.CreatePaymentDTO
 import com.example.tobi.integrated.db.entity.Bundle
 import com.example.tobi.integrated.db.entity.Package
+import com.example.tobi.integrated.db.entity.PaymentLimitCond
 import com.example.tobi.integrated.db.repository.BundleRepository
 import com.example.tobi.integrated.db.service.pg.PayHelper
 import com.example.tobi.integrated.db.service.pg.dto.ResultDTO
@@ -27,6 +30,7 @@ class BundleService(
     private val userApiService: UserApiService,
     private val itemApiService: ItemApiService,
     private val payHelper: PayHelper,
+    private val paymentLimitCondService: PaymentLimitCondService,
 ) {
 
     companion object {
@@ -129,6 +133,13 @@ class BundleService(
         }
 
         val user = userApiService.getUserById(createBundleDTO.userId)
+
+        if (!validLimitCond(user.id, createBundleDTO.payList)) {
+            throw ResultCodeException(
+                resultCode = ResultCode.ERROR_PAY_LIMIT_COND_FAIL,
+                loglevel = Level.WARN,
+            )
+        }
 
         val bundle = try {
             bundleRepository.save(
@@ -527,5 +538,71 @@ class BundleService(
         }
 
         return approve
+    }
+
+    fun getBundlesByUserIdAndDate(getBundlesByUserAndDateDTO: GetBundlesByUserAndDateDTO): MutableList<Bundle> {
+        log.debug("call getBundlesByUserIdAndDate : getBundlesByUserAndDateDTO = '$getBundlesByUserAndDateDTO'")
+
+        if (getBundlesByUserAndDateDTO.userId == null) {
+            throw ResultCodeException(
+                ResultCode.ERROR_PARAMETER_NOT_EXISTS,
+                loglevel = Level.WARN,
+                message = "파라미터에 [userId]가 존재하지 않습니다."
+            )
+        }
+
+        if (getBundlesByUserAndDateDTO.date == null) {
+            throw ResultCodeException(
+                ResultCode.ERROR_PARAMETER_NOT_EXISTS,
+                loglevel = Level.WARN,
+                message = "파라미터에 [date]가 존재하지 않습니다."
+            )
+        }
+
+        val user = userApiService.getUserById(getBundlesByUserAndDateDTO.userId)
+
+        return bundleRepository.findTodayBundles(user.id, getBundlesByUserAndDateDTO.date)
+    }
+
+    fun getBundlesByUserIdAndMonth(getBundlesByUserAndMonthDTO: GetBundlesByUserAndMonthDTO): MutableList<Bundle> {
+        log.debug("call getBundlesByUserIdAndMonth : getBundlesByUserAndMonthDTO = '$getBundlesByUserAndMonthDTO'")
+
+        if (getBundlesByUserAndMonthDTO.userId == null) {
+            throw ResultCodeException(
+                ResultCode.ERROR_PARAMETER_NOT_EXISTS,
+                loglevel = Level.WARN,
+                message = "파라미터에 [userId]가 존재하지 않습니다."
+            )
+        }
+
+        if (getBundlesByUserAndMonthDTO.date == null) {
+            throw ResultCodeException(
+                ResultCode.ERROR_PARAMETER_NOT_EXISTS,
+                loglevel = Level.WARN,
+                message = "파라미터에 [date]가 존재하지 않습니다."
+            )
+        }
+
+        val user = userApiService.getUserById(getBundlesByUserAndMonthDTO.userId)
+
+        return bundleRepository.findThisMonthBundles(user.id, getBundlesByUserAndMonthDTO.date)
+    }
+
+    fun validLimitCond(userId: Long, paymentList: MutableList<PaymentDTO>): Boolean {
+        log.debug("call validLimitCond : userId = '$userId', paymentList = '$paymentList'")
+
+        return paymentLimitCondService.checkTransactionLimit(paymentList) ||
+                paymentLimitCondService.checkDailyLimit(
+                    CheckDailyLimitDTO(
+                        userId = userId,
+                        payList = paymentList
+                    )
+                ) ||
+                paymentLimitCondService.checkMonthlyLimit(
+                    CheckMonthlyLimitDTO(
+                        userId = userId,
+                        payList = paymentList
+                    )
+                )
     }
 }

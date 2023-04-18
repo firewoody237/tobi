@@ -15,6 +15,7 @@ enum class ResultCode(val code: Int, val msg: String) {
     ERROR_NOT_MEDIA_TYPE(1106, "적용 불가능한 Content-Type 입니다."),
     ERROR_ACCESS_DENIED(1107, "해당 API에 대한 권한이 없습니다."),
     ERROR_NOTHING_TO_MODIFY(1108, "변경사항이 존재하지 않습니다."),
+    ERROR_PAY_LIMIT_COND_FAIL(1109, "지불 제한 조건 체크에 실패했습니다."),
 
     //2000 : 유저관련
     ERROR_USER_NOT_EXISTS(2000, "존재하지 않는 유저입니다."),
