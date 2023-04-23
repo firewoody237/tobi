@@ -47,9 +47,10 @@ class UserApiService(
         .baseUrl(USER_API_HOST)
         .responseTimeout(Duration.ofMillis(5000))
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000)
-
+        
     private val webClient = WebClient
         .builder()
+        .defaultHeader("requestUuid", ThreadContext.get("requestUuid"))
         .clientConnector(ReactorClientHttpConnector(httpClient))
         .build()
 

@@ -14,6 +14,7 @@ import com.example.tobi.integrated.db.entity.PaymentLimitCond
 import com.example.tobi.integrated.db.repository.BundleRepository
 import com.example.tobi.integrated.db.service.pg.PayHelper
 import com.example.tobi.integrated.db.service.pg.dto.ResultDTO
+import com.sun.tools.javac.comp.Todo
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
 import org.springframework.stereotype.Service
@@ -116,7 +117,7 @@ class BundleService(
             )
         }
 
-        if (createBundleDTO.itemList?.size!! < 1) {
+        if (createBundleDTO.itemList.isNullOrEmpty()) {
             throw ResultCodeException(
                 resultCode = ResultCode.ERROR_PARAMETER_NOT_EXISTS,
                 loglevel = Level.WARN,
@@ -124,7 +125,7 @@ class BundleService(
             )
         }
 
-        if (createBundleDTO.payList?.size!! < 1) {
+        if (createBundleDTO.payList.isNullOrEmpty()) {
             throw ResultCodeException(
                 resultCode = ResultCode.ERROR_PARAMETER_NOT_EXISTS,
                 loglevel = Level.WARN,
@@ -134,12 +135,7 @@ class BundleService(
 
         val user = userApiService.getUserById(createBundleDTO.userId)
 
-        if (!validLimitCond(user.id, createBundleDTO.payList)) {
-            throw ResultCodeException(
-                resultCode = ResultCode.ERROR_PAY_LIMIT_COND_FAIL,
-                loglevel = Level.WARN,
-            )
-        }
+        validLimitCond(user.id, createBundleDTO.payList, createBundleDTO.amount)
 
         val bundle = try {
             bundleRepository.save(
@@ -157,7 +153,7 @@ class BundleService(
             )
         }
 
-        createBundleDTO.itemList.forEach {  item ->
+        createBundleDTO.itemList.forEach { item ->
             addItemToBundle(
                 AddItemToBundleDTO(
                     userId = user.id,
@@ -175,8 +171,10 @@ class BundleService(
         }
 
         val paidList: MutableList<ResultDTO> = mutableListOf()
+        var currentPay : PaymentDTO? = null
         try {
             createBundleDTO.payList.forEach { pay ->
+                currentPay = pay
                 val payResult = addPayToBundle(
                     AddPayToBundleDTO(
                         bundleId = bundle.id,
@@ -186,6 +184,7 @@ class BundleService(
                 paidList.add(payResult)
             }
         } catch (e: Exception) {
+            log.error("payment error. currentPay: $currentPay", e)
             paidList.forEach { pay ->
                 abortPayments(pay)
             }
@@ -193,6 +192,23 @@ class BundleService(
 
         //call shopping surl(success url) -->
         return "${createBundleDTO.surl}?rparam=${createBundleDTO.rparam}"
+
+//        서비스 -> 페이한테 reserve(구매할 아이템, 유저 아이디, 쿠폰 정보, 마일리지 정보)
+//        rsvseq
+//        서비스 BE가 서비스 FE한테 rsvseq를 넘기고, FE는 결제창을 띄운다(pay.naver.com/rsvseq)
+//
+//        페이 FE가 받아서 rsvseq에 대한 정보를 페이BE한테 요구
+//        페이 BE는 구매할 아이템, 유저 아이디, 쿠폰 정보, 마일리지 정보를 줘요
+//
+//
+//
+//
+//        1 청바지 1 ㅣㅣㅣ
+//        2 상의  1
+//        3 모자  1
+
+
+
 
         //1. 이 프로젝트의 경우 어디로 success콜백해줘야 하는걸까? 유저..?
 
@@ -217,6 +233,12 @@ class BundleService(
                 message = "파라미터에 [ID]가 존재하지 않습니다."
             )
         }
+//                                a
+//                                b
+//                                c
+//        1 table - 1 mapper - 1service - 1conroller
+//        1 외부 서비스 - 1service
+
 
         var isChange = false
         val bundle = getBundle(updateBundleDTO.id)
@@ -444,6 +466,21 @@ class BundleService(
         val item = itemApiService.getItemById(itemId = addItemToBundleDTO.itemId)
         val user = userApiService.getUserById(userId = addItemToBundleDTO.userId)
         val bundle = getBundleByUserId(user.id)
+//        TODO("위에 코드 점검하기.")
+
+        (0 until addItemToBundleDTO.quantity).forEach{ _ ->
+            packageService.createPackage(
+                CreatePackageDTO(
+                    itemId = item.id,
+                    paidAt = null,
+                    amount = item.price,
+                    quantity = 1,
+                    bundleId = bundle.id
+                )
+            )
+        }
+
+        TODO("VS")
 
         packageService.createPackage(
             CreatePackageDTO(
@@ -455,6 +492,7 @@ class BundleService(
             )
         )
 
+        TODO("bundle 넣어줄 때 금액 한 번에")
         updateBundle(
             UpdateBundleDTO(
                 id = bundle.id,
@@ -492,9 +530,22 @@ class BundleService(
 //        }
 
 
-        val approve = payHelper.payment(
+        TODO("bundle id를 결제 시 같이 넣어서 보내야함")
+
+        ㅕval approve = payHelper.payment(
             addPayToBundleDTO.paymentDTO
         )
+
+        buddle roll ->
+
+
+        ItemA(1000) -> Card(500)/간(500) <-얘만 취소
+        ItemB(1000) -> Card(500)/간(500)
+
+        Card 1000
+        간편결제 1000
+
+        //
 
         val formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
         val dateTime = LocalDateTime.parse(approve.approveDt + approve.approveTm, formatter)
@@ -588,21 +639,32 @@ class BundleService(
         return bundleRepository.findThisMonthBundles(user.id, getBundlesByUserAndMonthDTO.date)
     }
 
-    fun validLimitCond(userId: Long, paymentList: MutableList<PaymentDTO>): Boolean {
+    fun validLimitCond(userId: Long, paymentList: MutableList<PaymentDTO>, amount: Long) {
         log.debug("call validLimitCond : userId = '$userId', paymentList = '$paymentList'")
 
-        return paymentLimitCondService.checkTransactionLimit(paymentList) ||
-                paymentLimitCondService.checkDailyLimit(
-                    CheckDailyLimitDTO(
-                        userId = userId,
-                        payList = paymentList
-                    )
-                ) ||
-                paymentLimitCondService.checkMonthlyLimit(
-                    CheckMonthlyLimitDTO(
-                        userId = userId,
-                        payList = paymentList
-                    )
-                )
+        if(amount  != paymentList.sumOf { it?.amount ?: 0L }){
+            TODO("금액 다르다는 에러")
+            throw ResultCodeException(
+                resultCode = ResultCode.ERROR_PARAMETER_NOT_EXISTS,
+                loglevel = Level.WARN,
+                message = "파라미터에 [payList]이 존재하지 않습니다."
+            )
+        }
+
+        paymentLimitCondService.checkTransactionLimit(paymentList)
+
+        paymentLimitCondService.checkDailyLimit(
+            CheckDailyLimitDTO(
+                userId = userId,
+                payList = paymentList
+            )
+        )
+
+        paymentLimitCondService.checkMonthlyLimit(
+            CheckMonthlyLimitDTO(
+                userId = userId,
+                payList = paymentList
+            )
+        )
     }
 }

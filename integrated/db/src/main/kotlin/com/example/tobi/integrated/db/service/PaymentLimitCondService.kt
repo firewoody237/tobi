@@ -20,6 +20,7 @@ import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import kotlin.test.todo
 
 @Service
 class PaymentLimitCondService(
@@ -33,10 +34,10 @@ class PaymentLimitCondService(
         private val log = LogManager.getLogger()
     }
 
-    fun checkTransactionLimit(payList: MutableList<PaymentDTO>): Boolean {
+    fun checkTransactionLimit(payList: MutableList<PaymentDTO>) {
         log.debug("call checkTransactionLimit : payList = '$payList'")
 
-        if (payList.size <= 0) {
+        if (payList.isEmpty()) {
             throw ResultCodeException(
                 resultCode = ResultCode.ERROR_PARAMETER_NOT_EXISTS,
                 loglevel = Level.WARN,
@@ -44,7 +45,7 @@ class PaymentLimitCondService(
             )
         }
 
-        payList.forEach {  payment ->
+        payList.forEach { payment ->
             if (payment.pg == null) {
                 throw ResultCodeException(
                     resultCode = ResultCode.ERROR_PARAMETER_NOT_EXISTS,
@@ -55,15 +56,17 @@ class PaymentLimitCondService(
             val paymentLimitCond = paymentLimitCondRepository.findByPg(payment.pg)
             if (paymentLimitCond.isPresent) {
                 if (payment.amount!! > paymentLimitCond.get().transactionLimit!!) {
-                    return false
+                    throw ResultCodeException(
+                        resultCode = ResultCode.ERROR_PAY_LIMIT_COND_FAIL,
+                        loglevel = Level.WARN,
+                        message = "amt is ${payment.amount}. but transactionLimit is ${paymentLimitCond.get().transactionLimit!!}"
+                    )
                 }
             }
         }
-
-        return true
     }
 
-    fun checkDailyLimit(checkDailyLimitDTO: CheckDailyLimitDTO): Boolean {
+    fun checkDailyLimit(checkDailyLimitDTO: CheckDailyLimitDTO) {
         log.debug("call checkDailyLimit : checkDailyLimitDTO = '$checkDailyLimitDTO'")
 
         if (checkDailyLimitDTO.userId == null) {
@@ -74,7 +77,7 @@ class PaymentLimitCondService(
             )
         }
 
-        if (checkDailyLimitDTO.payList!!.size <= 0) {
+        if (checkDailyLimitDTO.payList.isNullOrEmpty()) {
             throw ResultCodeException(
                 resultCode = ResultCode.ERROR_PARAMETER_NOT_EXISTS,
                 loglevel = Level.WARN,
@@ -84,8 +87,7 @@ class PaymentLimitCondService(
 
         val user = userApiService.getUserById(checkDailyLimitDTO.userId)
 
-        checkDailyLimitDTO.payList.forEach {  payment ->
-            var sum = 0L
+        checkDailyLimitDTO.payList.forEach { payment ->
             if (payment.pg == null) {
                 throw ResultCodeException(
                     resultCode = ResultCode.ERROR_PARAMETER_NOT_EXISTS,
@@ -105,24 +107,30 @@ class PaymentLimitCondService(
                 )
             )
 
+
+            var sum = 0L
             bundleList.forEach { bundle ->
                 packageService.getPackagesByBundle(bundle).forEach { myPackage ->
-                    sum += paymentService.getPaymentsByPackage(myPackage).filter { it.pg == payment.pg }[0].amount!!
+                    sum += paymentService.getPaymentsByPackage(myPackage).firstOrNull { it.pg == payment.pg }?.amount
+                        ?: 0L
                 }
             }
+
+            //flatMap 알아보기
 
             val paymentLimitCond = paymentLimitCondRepository.findByPg(payment.pg)
             if (paymentLimitCond.isPresent) {
                 if (sum > paymentLimitCond.get().dailyLimit!!) {
-                    return false
+                    throw ResultCodeException(
+                        resultCode = ResultCode.ERROR_PAY_LIMIT_COND_FAIL,
+                        loglevel = Level.WARN,
+                    )
                 }
             }
         }
-
-        return true
     }
 
-    fun checkMonthlyLimit(checkMonthlyLimitDTO: CheckMonthlyLimitDTO): Boolean {
+    fun checkMonthlyLimit(checkMonthlyLimitDTO: CheckMonthlyLimitDTO) {
         log.debug("call checkMonthlyLimit : checkMonthlyLimitDTO = '$checkMonthlyLimitDTO'")
 
         if (checkMonthlyLimitDTO.userId == null) {
@@ -133,7 +141,7 @@ class PaymentLimitCondService(
             )
         }
 
-        if (checkMonthlyLimitDTO.payList!!.size <= 0) {
+        if (checkMonthlyLimitDTO.payList.isNullOrEmpty()) {
             throw ResultCodeException(
                 resultCode = ResultCode.ERROR_PARAMETER_NOT_EXISTS,
                 loglevel = Level.WARN,
@@ -143,8 +151,8 @@ class PaymentLimitCondService(
 
         val user = userApiService.getUserById(checkMonthlyLimitDTO.userId)
 
-        checkMonthlyLimitDTO.payList.forEach {  payment ->
-            var sum = 0L
+        checkMonthlyLimitDTO.payList.forEach { payment ->
+
             if (payment.pg == null) {
                 throw ResultCodeException(
                     resultCode = ResultCode.ERROR_PARAMETER_NOT_EXISTS,
@@ -164,20 +172,24 @@ class PaymentLimitCondService(
                 )
             )
 
+            var sum = 0L
             bundleList.forEach { bundle ->
                 packageService.getPackagesByBundle(bundle).forEach { myPackage ->
                     sum += paymentService.getPaymentsByPackage(myPackage).filter { it.pg == payment.pg }[0].amount!!
                 }
             }
 
+            TODO("firstornull")
+
             val paymentLimitCond = paymentLimitCondRepository.findByPg(payment.pg)
             if (paymentLimitCond.isPresent) {
                 if (sum > paymentLimitCond.get().monthlyLimit!!) {
-                    return false
+                    throw ResultCodeException(
+                        resultCode = ResultCode.ERROR_PAY_LIMIT_COND_FAIL,
+                        loglevel = Level.WARN,
+                    )
                 }
             }
         }
-
-        return true
     }
 }
